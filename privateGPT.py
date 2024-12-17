@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 from langchain.chains import RetrievalQA
-from langchain.embeddings import HuggingFaceEmbeddings
+from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
-from langchain.vectorstores import Chroma
-from langchain.llms import Ollama
+# from langchain_community.vectorstores import Chroma
+from langchain_chroma import Chroma
+# from langchain_community.llms import Ollama
+from langchain_ollama import OllamaLLM
 import chromadb
 import os
 import argparse
 import time
-from langchain_community.embeddings import OllamaEmbeddings
-
+from langchain_ollama import OllamaEmbeddings
 
 # CHROMA_PATH = os.getenv('CHROMA_PATH', 'chroma')
 # COLLECTION_NAME = os.getenv('COLLECTION_NAME', 'local-rag')
 # TEXT_EMBEDDING_MODEL = os.getenv('TEXT_EMBEDDING_MODEL', 'nomic-embed-text')
-
 
 model = os.environ.get("MODEL", "artifish/llama3.2-uncensored")
 # For embeddings model, the example uses a sentence-transformers model
@@ -31,7 +31,8 @@ def main():
     # Parse the command line arguments
     args = parse_arguments()
     # embeddings = HuggingFaceEmbeddings(model_name=embeddings_model_name)
-    embeddings = OllamaEmbeddings(model=embeddings_model_name,show_progress=True)
+    # embeddings = OllamaEmbeddings(model=embeddings_model_name,show_progress=True)
+    embeddings = OllamaEmbeddings(model=embeddings_model_name)
 
     db = Chroma(persist_directory=persist_directory, embedding_function=embeddings)
 
@@ -39,7 +40,7 @@ def main():
     # activate/deactivate the streaming StdOut callback for LLMs
     callbacks = [] if args.mute_stream else [StreamingStdOutCallbackHandler()]
 
-    llm = Ollama(model=model, callbacks=callbacks)
+    llm = OllamaLLM(model=model, callbacks=callbacks)
 
     qa = RetrievalQA.from_chain_type(llm=llm, chain_type="stuff", retriever=retriever, return_source_documents= not args.hide_source)
     # Interactive questions and answers
